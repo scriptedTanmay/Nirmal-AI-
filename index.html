@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nirmal AI - Modern Chat</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+  
+  :root {
+    --primary-color: #4a90e2;
+    --bg-light: #f9fafb;
+    --bg-light-panel: #ffffff;
+    --bg-dark: #121212;
+    --bg-dark-panel: #1e1e1e;
+    --text-light: #1a1a1a;
+    --text-light-muted: #555;
+    --text-dark: #eee;
+    --text-dark-muted: #aaa;
+    --border-light: #ddd;
+    --border-dark: #333;
+  }
+  
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+  body.dark {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 280px;
+    background-color: var(--bg-light-panel);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+  }
+  body.dark #sidebar {
+    background-color: var(--bg-dark-panel);
+    border-color: var(--border-dark);
+  }
+
+  #sidebar header {
+    padding: 1rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  body.dark #sidebar header {
+    border-color: var(--border-dark);
+  }
+
+  #newChatBtn {
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #newChatBtn:hover {
+    background: #357ABD;
+  }
+
+  #conversationsList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  .conversation-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    color: var(--text-light-muted);
+    user-select: none;
+  }
+  .conversation-item:hover {
+    background-color: #e2e8f0;
+    color: var(--text-light);
+  }
+  body.dark .conversation-item:hover {
+    background-color: #333;
+    color: var(--text-dark);
+  }
+  .conversation-item.active {
+    border-left-color: var(--primary-color);
+    background-color: #d0e2fd;
+    color: var(--text-light);
+    font-weight: 700;
+  }
+  body.dark .conversation-item.active {
+    background-color: #294e9b;
+    color: var(--text-dark);
+  }
+
+  /* Main chat */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-light-panel);
+  }
+  body.dark #main {
+    background-color: var(--bg-dark-panel);
+  }
+
+  #chatHeader {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  body.dark #chatHeader {
+    border-color: var(--border-dark);
+  }
+
+  #chatHeader h2 {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  #darkModeToggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    user-select: none;
+  }
+
+  #chatWindow {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .message {
+    max-width: 70%;
+    padding: 1rem 1.2rem;
+    border-radius: 20px;
+    line-height: 1.4;
+    font-size: 1rem;
+    white-space: pre-wrap;
+  }
+  .message.user {
+    background-color: var(--primary-color);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .message.ai {
+    background-color: #e2e8f0;
+    color: #111;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  body.dark .message.ai {
+    background-color: #2a2a2a;
+    color: var(--text-dark);
+  }
+
+  #inputArea {
+    border-top: 1px solid var(--border-light);
+    padding: 1rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+  }
+  body.dark #inputArea {
+    border-color: var(--border-dark);
+  }
+
+  #userInput {
+    flex: 1;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 30px;
+    border: 1px solid var(--border-light);
+    outline: none;
+    resize: none;
+    font-family: 'Inter', sans-serif;
+  }
+  body.dark #userInput {
+    background-color: #121212;
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+  }
+
+  #sendBtn {
+    background-color: var(--primary-color);
+    border: none;
+    color: white;
+    padding: 0 1.5rem;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #sendBtn:hover {
+    background-color: #357abd;
+  }
+
+  /* Footer */
+  #footer {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-light-muted);
+    padding: 0.5rem;
+    user-select: none;
+    background-color: var(--bg-light-panel);
+    border-top: 1px solid var(--border-light);
+  }
+  body.dark #footer {
+    background-color: var(--bg-dark-panel);
+    color: var(--text-dark-muted);
+    border-color: var(--border-dark);
+  }
+
+  /* Scrollbar */
+  #conversationsList::-webkit-scrollbar,
+  #chatWindow::-webkit-scrollbar {
+    width: 8px;
+  }
+  #conversationsList::-webkit-scrollbar-thumb,
+  #chatWindow::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 4px;
+  }
+  #conversationsList::-webkit-scrollbar-track,
+  #chatWindow::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #sidebar {
+      width: 60px;
+    }
+    #sidebar header h1 {
+      display: none;
+    }
+    .conversation-item {
+      font-size: 0;
+      padding: 1rem 0.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="sidebar">
+    <header>
+      <span>Nirmal AI</span>
+      <button id="newChatBtn" title="New Chat">+</button>
+    </header>
+    <div id="conversationsList"></div>
+  </div>
+
+  <div id="main">
+    <div id="chatHeader">
+      <h2 id="chatTitle">New Chat</h2>
+      <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
+    </div>
+
+    <div id="chatWindow"></div>
+
+    <form id="inputArea">
+      <textarea id="userInput" rows="1" placeholder="Type a message..." autocomplete="off" required></textarea>
+      <button type="submit" id="sendBtn">Send</button>
+    </form>
+  </div>
+
+  <div id="footer">Developed by Tanmay</div>
+
+  <script>
+    const API_URL = 'https://vyro-ai-xy5z.onrender.com/api/chat'; // Replace with your render URL
+
+    const sidebar = document.getElementById('sidebar');
+    const conversationsList = document.getElementById('conversationsList');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const chatTitle = document.getElementById('chatTitle');
+    const chatWindow = document.getElementById('chatWindow');
+    const inputArea = document.getElementById('inputArea');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+
+    let conversations = [];
+    let activeConversationIndex = null;
+
+    // Dark Mode Setup
+    function loadDarkMode() {
+      if(localStorage.getItem('darkMode') === 'true') {
+        body.classList.add('dark');
+        darkModeToggle.textContent = '☀️';
+      } else {
+        body.classList.remove('dark');
+        darkModeToggle.textContent = '🌙';
+      }
+    }
+    darkModeToggle.onclick = () => {
+      if(body.classList.contains('dark')) {
+        body.classList.remove('dark');
+        localStorage.setItem('darkMode', 'false');
+        darkModeToggle.textContent = '🌙';
+      } else {
+        body.classList.add('dark');
+        localStorage.setItem('darkMode', 'true');
+        darkModeToggle.textContent = '☀️';
+      }
+    };
+    loadDarkMode();
+
+    // Render conversation list in sidebar
+    function renderConversationsList() {
+      conversationsList.innerHTML = '';
+      conversations.forEach((conv, idx) => {
+        const div = document.createElement('div');
+        div.className = 'conversation-item' + (idx === activeConversationIndex ? ' active' : '');
+        div.textContent = conv.title || 'Chat ' + (idx + 1);
+        div.onclick = () => {
+          setActiveConversation(idx);
+        };
+        conversationsList.appendChild(div);
+      });
+    }
+
+    // Render messages in chat window
+    function renderMessages() {
+      chatWindow.innerHTML = '';
+      if(activeConversationIndex === null) return;
+      const messages = conversations[activeConversationIndex].messages || [];
+      messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message ' + (msg.role === 'user' ? 'user' : 'ai');
+        div.textContent = msg.content;
+        chatWindow.appendChild(div);
+      });
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Set active conversation
+    function setActiveConversation(index) {
+      activeConversationIndex = index;
+      chatTitle.textContent = conversations[index].title || ('Chat ' + (index + 1));
+      renderConversationsList();
+      renderMessages();
+    }
+
+    // Add new conversation
+    function newConversation() {
+      const newConv = { title: 'New Chat', messages: [] };
+      conversations.push(newConv);
+      setActiveConversation(conversations.length - 1);
+      saveConversations();
+    }
+
+    // Save to localStorage
+    function saveConversations() {
+      localStorage.setItem('nirmal_ai_conversations', JSON.stringify(conversations));
+    }
+
+    // Load from localStorage
+    function loadConversations() {
+      const saved = localStorage.getItem('nirmal_ai_conversations');
+      if(saved) {
+        conversations = JSON.parse(saved);
+      }
+      if(conversations.length === 0) {
+        newConversation();
+      } else {
+        setActiveConversation(0);
+      }
+    }
+
+    // Send message to backend and get response
+    async function sendMessage(message) {
+      if(activeConversationIndex === null) return;
+
+      const conv = conversations[activeConversationIndex];
+      conv.messages.push({ role: 'user', content: message });
+      renderMessages();
+
+      // Show loading AI message
+      conv.messages.push({ role: 'ai', content: '...' });
+      renderMessages();
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: conv.messages })
+        });
+        const data = await res.json();
+
+        // Remove loading message
+        conv.messages.pop();
+
+        if(data.reply) {
+          conv.messages.push({ role: 'ai', content: data.reply });
+        } else {
+          conv.messages.push({ role: 'ai', content: 'Error: No reply from AI' });
+        }
+      } catch (err) {
+        // Remove loading message
+        conv.messages.pop();
+        conv.messages.push({ role: 'ai', content: 'Error connecting to server.' });
+      }
+
+      renderMessages();
+      saveConversations();
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Handle form submit
+    inputArea.addEventListener('submit', e => {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if(!message) return;
+      userInput.value = '';
+      sendMessage(message);
+    });
+
+    newChatBtn.addEventListener('click', () => {
+      newConversation();
+    });
+
+    // Auto resize textarea
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = userInput.scrollHeight + 'px';
+    });
+
+    // Initial load
+    loadConversations();
+
+  </script>
+</body>
+</html>
